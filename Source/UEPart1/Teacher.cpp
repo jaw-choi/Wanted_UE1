@@ -12,5 +12,6 @@ UTeacher::UTeacher()
 
 void UTeacher::DoLesson()
 {
+    ILessonInterface::DoLesson();
     UE_LOG(LogTemp, Log, TEXT("%d년차 선생님 %s님이 수업을 진행합니다."), Year, *Name);
 }

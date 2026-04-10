@@ -29,3 +29,4 @@ protected:
     UPROPERTY()
     int32 Year;
 };
+

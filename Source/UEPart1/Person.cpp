@@ -12,5 +12,5 @@ UPerson::UPerson()
 
 void UPerson::DoLesson()
 {
-    UE_LOG(LogTemp, Log, TEXT("%s님이 수업에 참여합니다."), *Name);
+    // 구현 내용 (비어있어도 됩니다)
 }

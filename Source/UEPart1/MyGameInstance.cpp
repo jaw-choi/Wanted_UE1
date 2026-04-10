@@ -4,6 +4,7 @@
 #include "MyGameInstance.h"
 #include "Student.h"
 #include "Teacher.h"
+//#include "Staff.h"
 
 UMyGameInstance::UMyGameInstance()
 {
@@ -15,68 +16,42 @@ void UMyGameInstance::Init()
 {
     Super::Init();
 
-    // 클래스 정보 가져오기.
-    UClass* ClassRuntime = GetClass();
-    UClass* ClassCompile = UMyGameInstance::StaticClass();
+    UE_LOG(LogTemp, Log, TEXT("================================================"));
 
-    // 어서트.
-    //check(ClassRuntime != ClassCompile);	// 크래시까지 발생시키는 어써트.
-    //ensure(ClassRuntime != ClassCompile);	// 출력 로그 창에 오류 표시.
-    //ensureAlways()
-
-    // 클래스 이름 출력.
-    UE_LOG(
-	LogTemp,
-	Log,
-	TEXT("학교를 담당하는 클래스: %s %s"),
-	*ClassRuntime->GetName(),
-	*ClassCompile->GetName()
-    );
-
-    SchoolName = TEXT("Digipen Institute of Technology");
-    UE_LOG(
-	LogTemp,
-	Log,
-	TEXT("학교 이름: %s"),
-	*SchoolName
-    );
-    UE_LOG(
-	LogTemp,
-	Log,
-	TEXT("학교 이름: %s"),
-	*GetClass()->GetDefaultObject<UMyGameInstance>()->SchoolName
-    );
-
-    UE_LOG(LogTemp, Log, TEXT("===================="));
-
-    // 학생/선생님 객체 생성.
-    UStudent* Student = NewObject<UStudent>();
-    UTeacher* Teacher = NewObject<UTeacher>();
-
-    // 학생 클래스의 Getter/Setter 사용.
-    Student->SetName(TEXT("제이"));
-    UE_LOG(LogTemp, Log, TEXT("새로운 학생 이름: %s"), *Student->GetName());
-
-    // 언리얼의 리플렉션을 활용해 프로퍼티 정보 설정 및 가져오기.
-    FProperty* NameProp = Teacher->GetClass()->FindPropertyByName(TEXT("Name"));
-    if (NameProp)
+    // TArray는 언리얼 엔진이 지원하는 동적배열
+    // STL의 std::vector와 유사한 기능을 제공.
+    // 언리얼 오브젝트에 특화된 동적 배열.
+    TArray<UPerson*> Persons =
     {
-	FString CurrentTecherName;
-        NameProp->GetValue_InContainer(Teacher, &CurrentTecherName); // Teacher 객체의 Name 프로퍼티 값 가져오기.
-        UE_LOG(LogTemp, Log, TEXT("현재 선생님 이름: %s"), *CurrentTecherName);
-    }
+        NewObject<UStudent>(),
+        NewObject<UTeacher>(),
+        //NewObject<UStaff>()
+    };
 
-    // 리플렉션을 활용해 프로퍼티에 새로운 값 설정하기.
-    FString NewTeacherName = TEXT("롸니");
-    NameProp->SetValue_InContainer(Teacher, &NewTeacherName); // Teacher 객체의 Name 프로퍼티 값 설정하기.
-    UE_LOG(LogTemp, Log, TEXT("새로운 선생님 이름: %s"), *Teacher->GetName());
-
-    // 함수 호출 (리플렉션 활용).
-    UFunction* DoLessonFunc = Teacher->GetClass()->FindFunctionByName(TEXT("DoLesson"));
-
-    if (DoLessonFunc)
+    for (const auto* Person : Persons)
     {
-        Teacher->ProcessEvent(DoLessonFunc, nullptr); // DoLesson 함수 호출하기.
+        UE_LOG(LogTemp, Log, TEXT("구성원 이름: %s"), *Person->GetName());
     }
-   
+    
+    UE_LOG(LogTemp, Log, TEXT("================================================"));
+
+    for (auto* Person : Persons)
+    {
+        // 인터페이스로 형변환.
+        ILessonInterface* LessonInterface = Cast<ILessonInterface>(Person);
+        if (LessonInterface)
+        {
+            LessonInterface->DoLesson();
+            UE_LOG(LogTemp, Log, TEXT("%s 님은 쉅에 참여할 수 있습니다."), *Person->GetName());
+        }
+        else
+        {
+            LessonInterface->DoLesson();
+            UE_LOG(LogTemp, Log, TEXT("%s 님은 쉅에 참여할 수 없 습니다."), *Person->GetName());
+        }
+    }
+    UE_LOG(LogTemp, Log, TEXT("================================================"));
+
+
+
 }
