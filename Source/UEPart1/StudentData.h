@@ -1,39 +1,15 @@
-#pragma once
-#include "CoreMinimal.h"
-#include "StudentData.generated.h"
+ï»¿#pragma once
 
-USTRUCT(/*BlueprintType*/)
+#include "CoreMinimal.h"
+
 struct FStudentData
 {
-    GENERATED_BODY()
-
-
-    FStudentData() 
-    {
-        Name = TEXT("Default Name");
-        Order = 0; 
-    }
-    FStudentData(const FString& InName, int32 InOrder)
-        : Name(InName), Order(InOrder) 
+    FStudentData();
+    FStudentData(int32 InOrder, const FString& InName)
+        : Order(InOrder), Name(InName) 
     {
     }
 
-    // TSet¿¡ »ç¿ëÇÏ±â À§ÇÑ ÇÔ¼ö ¿À¹ö·Îµù.
-    bool operator==(const FStudentData& InOther) const
-    {
-        return Name == InOther.Name && Order == InOther.Order;
-    }
-
-    friend FORCEINLINE uint32 GetTypeHash(const FStudentData& InData)
-    {
-        return GetTypeHash(InData.Order);
-        //return HashCombine(GetTypeHash(InData.Name), GetTypeHash(InData.Order));
-    }
-
-    UPROPERTY()
-    FString Name;
-
-    UPROPERTY()
-    int32 Order;
-
+    int32 Order = -1;
+    FString Name = TEXT("ìµœìž¬ìš°");
 };
