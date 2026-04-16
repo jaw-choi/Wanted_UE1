@@ -5,6 +5,26 @@
 #include "StudentData.h"
 #include "Student.h"
 #include "JsonObjectConverter.h"
+#include "UObject/SavePackage.h"
+
+// static 변수 초기화.
+// /Game -> 프로젝트 경로 /Content 폴더 가리킴
+const FString UMyGameInstance::PackageName(TEXT("/Game/Student"));
+const FString UMyGameInstance::AssetName(TEXT("Student"));
+
+void PrintStudentInfo(
+    const UStudent* InStudent,
+    const FString& InTag)
+{
+    UE_LOG(
+        LogTemp,
+        Log,
+        TEXT("[%s] 이름: %s, 순번: %d"),
+        *InTag,
+        *InStudent->GetName(),
+        InStudent->GetOrder()
+    );
+}
 
 UMyGameInstance::UMyGameInstance()
 {
@@ -195,13 +215,153 @@ void UMyGameInstance::Init()
                 StudentDest
             ))
             {
-                UE_LOG(
-                    LogTemp,
-                    Log,
-                    TEXT("[JsonData] 이름: %s, 순번: %d"),
-                    *StudentDest->GetName(),
-                    StudentDest->GetOrder());
+                //UE_LOG(
+                //    LogTemp,
+                //    Log,
+                //    TEXT("[JsonData] 이름: %s, 순번: %d"),
+                //    *StudentDest->GetName(),
+                //    StudentDest->GetOrder());
+                PrintStudentInfo(StudentDest, TEXT("JsonData"));
             }
         }
     }
+
+    //SaveStudentPackage();
+    //LoadStudentPackage();
+
+    // 경로 값을 사용해 오브젝트를 로드하는 함수 실행.
+    LoadStudentObject();
 }
+
+void UMyGameInstance::LoadStudentPackage() const
+{
+    // 패키지 로드.
+    UPackage* StudentPackage
+        = LoadPackage(nullptr, *PackageName, LOAD_None);
+
+    // 패키지 로드 실패 처리.
+    if (!StudentPackage)
+    {
+        UE_LOG(
+            LogTemp,
+            Warning,
+            TEXT("패키지를 찾을 수 없습니다.")
+        );
+        return;
+    }
+
+    // 완전히 로드되도록 함수 실행.
+    StudentPackage->FullyLoad();
+
+    // 패키지 안에 있는 언리얼 오브젝트(애셋) 검색.
+    UStudent* Student
+        = FindObject<UStudent>(StudentPackage, *AssetName);
+
+    if (Student)
+    {
+        // 로드한 결과 출력.
+        PrintStudentInfo(Student, TEXT("FindObject Asset"));
+    }
+}
+
+void UMyGameInstance::LoadStudentObject() const
+{
+    // 오브젝트 경로 값.
+    const FString SoftObjectPath
+        = FString::Printf(TEXT("%s.%s"),
+            *PackageName, *AssetName
+        );
+
+    // 오브젝트 로드.
+    UStudent* Student
+        = LoadObject<UStudent>(nullptr, *SoftObjectPath);
+    if (Student)
+    {
+        // 로드한 오브젝트 정보 출력.
+        PrintStudentInfo(Student, TEXT("LoadObject Asset"));
+    }
+}
+
+void UMyGameInstance::SaveStudentPackage() const
+{
+    // 패키지 생성.
+    UPackage* StudentPackage = LoadPackage(nullptr,*PackageName,LOAD_None);
+
+    if (StudentPackage)
+    {
+        StudentPackage->FullyLoad();
+
+    }
+
+    StudentPackage = CreatePackage(*PackageName);
+
+    // 패키지에 사용할 플래그 설정.
+    // RF_Public | RF_Standalone 두 플래그 값이 가장 일반적.
+    EObjectFlags PackageFlags = RF_Public | RF_Standalone;
+
+    // 패키지에 저장할 언리얼 오브젝트 생성.
+    UStudent* Student = NewObject<UStudent>(
+        StudentPackage,
+        UStudent::StaticClass(),
+        *AssetName,
+        PackageFlags
+    );
+
+    Student->SetName(TEXT("최재우"));
+    Student->SetOrder(11);
+
+    // 서브 오브젝트 추가.
+    const int32 SubObjectCount = 10;
+    for (int32 i = 1; i <= SubObjectCount; i++)
+    {
+        FString SubObjectName = FString::Printf(TEXT("%s_Student%d"), *AssetName, i);
+        // 객체 생성.
+        UStudent* SubStudent = NewObject<UStudent>(
+            Student,
+            UStudent::StaticClass(),
+            *SubObjectName,
+            PackageFlags
+        );
+
+        SubStudent->SetName(FString::Printf(TEXT("학생%d"), i));
+        SubStudent->SetOrder(i);
+    }
+
+    // 패키지 저장.
+    FString PackageFileName = FPackageName::LongPackageNameToFilename(
+        PackageName,
+        FPackageName::GetAssetPackageExtension()
+    );
+
+    // 참고로 이렇게도 가능.
+    //FString PackageFileName2
+    //    = FPaths::Combine(
+    //        FPlatformMisc::ProjectDir(),
+    //        TEXT("Content"),
+    //        FString::Printf(TEXT("%s%s"),
+    //            *AssetName,
+    //            *FPackageName::GetAssetPackageExtension())
+    //    );
+    FPaths::MakeStandardFilename(PackageFileName);
+
+    // 저장할 옵션 설정.
+    FSavePackageArgs SaveArgs;
+    SaveArgs.TopLevelFlags = PackageFlags;
+
+    // 패키지 저장.
+        if (UPackage::SavePackage(
+                StudentPackage,
+                nullptr,
+                *PackageFileName,
+                SaveArgs
+        ))
+        {
+                UE_LOG(LogTemp, Log, TEXT("패키지 저장 성공: %s"), *PackageFileName);
+        }
+        else
+        {
+                UE_LOG(LogTemp, Log, TEXT("패키지 저장 실패: %s"), *PackageFileName);
+        }
+
+}
+

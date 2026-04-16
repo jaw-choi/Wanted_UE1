@@ -1,4 +1,4 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+﻿// Fill out your copyright notice in the Description page of Project Settings.
 
 #pragma once
 
@@ -19,7 +19,17 @@ public:
 protected:
     virtual void Init() override;
 
+    void SaveStudentPackage() const;
+
+    void LoadStudentPackage() const;
+
+    void LoadStudentObject() const;
 private:
+
+    static const FString PackageName;
+
+    static const FString AssetName;
+
     UPROPERTY()
     TObjectPtr<class UStudent> StudentSource;
 	
